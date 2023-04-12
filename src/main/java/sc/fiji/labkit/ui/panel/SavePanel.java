@@ -29,31 +29,26 @@
 
 package sc.fiji.labkit.ui.panel;
 
+import ij.IJ;
+import ij.ImagePlus;
+import io.scif.services.DatasetIOService;
+import net.imagej.Dataset;
+import net.imagej.DatasetService;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.util.Cast;
+import org.scijava.plugin.Parameter;
 import sc.fiji.labkit.ui.DefaultExtensible;
 import sc.fiji.labkit.ui.labeling.Label;
-import sc.fiji.labkit.ui.models.ColoredLabelsModel;
-import sc.fiji.labkit.ui.models.Holder;
 import sc.fiji.labkit.ui.models.LabelingModel;
-import net.imglib2.type.numeric.ARGBType;
 import net.miginfocom.swing.MigLayout;
 import org.scijava.ui.behaviour.util.RunnableAction;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.plaf.basic.BasicArrowButton;
-import java.awt.*;
-import java.awt.event.ItemEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
 /**
  * Panel that shows the list of labels.
  */
@@ -65,6 +60,12 @@ public class SavePanel {
     private final JFrame dialogParent;
     private final Function<Supplier<Label>, JPopupMenu> menuFactory;
 
+    @Parameter
+    DatasetService datasetService;
+
+    @Parameter
+    DatasetIOService datasetIOService;
+
     public SavePanel(JFrame dialogParent, LabelingModel model,
                       boolean fixedLabels, Function<Supplier<Label>, JPopupMenu> menuFactory)
     {
@@ -72,9 +73,9 @@ public class SavePanel {
         this.dialogParent = dialogParent;
         this.panel = initPanel(fixedLabels);
         this.menuFactory = menuFactory;
-        model.listeners().addListener(this::update);
-        model.selected().notifier().addListener(() -> list.setSelected(model.selected().get()));
-        list.listeners().addListener(() -> model.selected().set(list.getSelected()));
+//        model.listeners().addListener(this::update);
+//        model.selected().notifier().addListener(() -> list.setSelected(model.selected().get()));
+//        list.listeners().addListener(() -> model.selected().set(list.getSelected()));
         update();
     }
 
@@ -97,8 +98,8 @@ public class SavePanel {
 
     private void update() {
         list.clear();
-        List<Label> items = model.items();
-        items.forEach((label) -> list.add(label, new EntryPanel(label)));
+//        List<Label> items = model.items();
+//        items.forEach((label) -> list.add(label, new EntryPanel(label)));
     }
 
     private JPanel initPanel(boolean fixedLabels) {
@@ -124,118 +125,123 @@ public class SavePanel {
 //        items.forEach(model::removeLabel);
 //    }
     private void saveAllLabels() {
-        RandomAccessibleInterval<? extends IntegerType<?>> img = image
-                .labeling().get().getIndexImg();
-        ImageJFunctions.show(Cast.unchecked(img), "Labeling");
+        String filename = "saving_test.tiff";
+        RandomAccessibleInterval<? extends IntegerType<?>> img = model.labeling().get().getIndexImg();
+        ImagePlus imp = ImageJFunctions.wrap(Cast.unchecked(img), "labeling", null);
+        IJ.save(imp, filename);
+        //ImagePlus imp = ImageJFunctions.show(Cast.unchecked(img), "Labeling");
     }
+    //        ImgSaver saver = new ImgSaver(extensible.context());
+//        saver.saveImg(filename, ImgView.wrap(img, null));
+//        System.out.println(img.toString());
 
-    private JButton initializeAddLabelButton() {
-        RunnableAction addLabelAction = new RunnableAction("Add label", this::addLabel);
-        JButton button = GuiUtils.createActionIconButton("Add label", addLabelAction, "add.png");
-        button.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-                .put(KeyStroke.getKeyStroke("ctrl A"), "create new label");
-        button.getActionMap().put("create new label", addLabelAction);
-        button.setToolTipText("<html><small>Keyboard shortcut:</small></html>");
-        return button;
-    }
+//    private JButton initializeAddLabelButton() {
+//        //RunnableAction addLabelAction = new RunnableAction("Add label", this::addLabel);
+//        JButton button = GuiUtils.createActionIconButton("Add label", addLabelAction, "add.png");
+//        button.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+//                .put(KeyStroke.getKeyStroke("ctrl A"), "create new label");
+//        button.getActionMap().put("create new label", addLabelAction);
+//        button.setToolTipText("<html><small>Keyboard shortcut:</small></html>");
+//        return button;
+//    }
 
-    private void changeSelectedLabel() {
-        Label label = list.getSelected();
-        if (label != null)
-            model.selected().set(label);
-    }
+//    private void changeSelectedLabel() {
+//        Label label = list.getSelected();
+//        if (label != null)
+//            model.selected().set(label);
+//    }
 
-    private void addLabel() {
-        model.addLabel();
-    }
+//    private void addLabel() {
+//        model.addLabel();
+//    }
 
-    private void removeAllLabels() {
-        List<Label> items = new ArrayList<>(model.items());
-        items.forEach(model::removeLabel);
-    }
+//    private void removeAllLabels() {
+//        List<Label> items = new ArrayList<>(model.items());
+//        items.forEach(model::removeLabel);
+//    }
 
-    private void renameLabel(Label label) {
-        final String oldName = label.name();
-        String newName = JOptionPane.showInputDialog(dialogParent,
-                "Rename label \"" + oldName + "\" to:", oldName);
-        if (newName == null) return;
-        model.renameLabel(label, newName);
-    }
+//    private void renameLabel(Label label) {
+//        final String oldName = label.name();
+//        String newName = JOptionPane.showInputDialog(dialogParent,
+//                "Rename label \"" + oldName + "\" to:", oldName);
+//        if (newName == null) return;
+//        model.renameLabel(label, newName);
+//    }
 
-    private void changeColor(Label label) {
-        ARGBType color = label.color();
-        Color newColor = JColorChooser.showDialog(dialogParent,
-                "Choose Color for Label \"" + label.name() + "\"", new Color(color
-                        .get()));
-        if (newColor == null) return;
-        model.setColor(label, new ARGBType(newColor.getRGB()));
-    }
+//    private void changeColor(Label label) {
+//        ARGBType color = label.color();
+//        Color newColor = JColorChooser.showDialog(dialogParent,
+//                "Choose Color for Label \"" + label.name() + "\"", new Color(color
+//                        .get()));
+//        if (newColor == null) return;
+//        model.setColor(label, new ARGBType(newColor.getRGB()));
+//    }
 
-    private void localize(Label label) {
-        model.localizeLabel(label);
-    }
+//    private void localize(Label label) {
+//        model.localizeLabel(label);
+//    }
 
     // -- Helper methods --
-    private class EntryPanel extends JPanel {
-
-        private final Label label;
-
-        EntryPanel(Label label) {
-            this.label = label;
-            setOpaque(true);
-            setLayout(new MigLayout("insets 4pt, gap 4pt, fillx"));
-            add(initColorButton());
-            add(new JLabel(label.name()), "grow, push, width 0:0:pref");
-            JPopupMenu menu = menuFactory.apply(() -> this.label);
-            add(initPopupMenuButton(menu));
-            setComponentPopupMenu(menu);
-            add(initFinderButton(), "gapx 4pt");
-            add(initVisibilityCheckbox());
-            initRenameOnDoubleClick();
-        }
-
-        private JCheckBox initVisibilityCheckbox() {
-            JCheckBox checkBox = GuiUtils.styleCheckboxUsingEye(new JCheckBox());
-            checkBox.setSelected(label.isVisible());
-            checkBox.addItemListener(event -> {
-                model.setActive(label, event.getStateChange() == ItemEvent.SELECTED);
-            });
-            checkBox.setOpaque(false);
-            return checkBox;
-        }
-
-        private JButton initPopupMenuButton(JPopupMenu menu) {
-            JButton button = new BasicArrowButton(BasicArrowButton.SOUTH);
-            button.setFocusable(false);
-            button.addActionListener(actionEvent -> {
-                menu.show(button, 0, button.getHeight());
-            });
-            return button;
-        }
-
-        private void initRenameOnDoubleClick() {
-            addMouseListener(new MouseAdapter() {
-
-                public void mouseClicked(MouseEvent event) {
-                    if (event.getClickCount() == 2) renameLabel(label);
-                }
-            });
-        }
-
-        private JButton initColorButton() {
-            JButton colorButton = new JButton();
-            colorButton.setFocusable(false);
-            colorButton.setBorder(new EmptyBorder(1, 1, 1, 1));
-            colorButton.setIcon(GuiUtils.createIcon(new Color(label.color().get())));
-            colorButton.addActionListener(l -> changeColor(label));
-            return colorButton;
-        }
-
-        private JButton initFinderButton() {
-            return GuiUtils.createIconButton(GuiUtils.createAction("locate",
-                    () -> localize(label), "crosshair.png"));
-        }
-
-    }
+//    private class EntryPanel extends JPanel {
+//
+//        private final Label label;
+//
+//        EntryPanel(Label label) {
+//            this.label = label;
+//            setOpaque(true);
+//            setLayout(new MigLayout("insets 4pt, gap 4pt, fillx"));
+//            add(initColorButton());
+//            add(new JLabel(label.name()), "grow, push, width 0:0:pref");
+//            JPopupMenu menu = menuFactory.apply(() -> this.label);
+//            add(initPopupMenuButton(menu));
+//            setComponentPopupMenu(menu);
+//            add(initFinderButton(), "gapx 4pt");
+//            add(initVisibilityCheckbox());
+//            initRenameOnDoubleClick();
+//        }
+//
+//        private JCheckBox initVisibilityCheckbox() {
+//            JCheckBox checkBox = GuiUtils.styleCheckboxUsingEye(new JCheckBox());
+//            checkBox.setSelected(label.isVisible());
+//            checkBox.addItemListener(event -> {
+//                model.setActive(label, event.getStateChange() == ItemEvent.SELECTED);
+//            });
+//            checkBox.setOpaque(false);
+//            return checkBox;
+//        }
+//
+//        private JButton initPopupMenuButton(JPopupMenu menu) {
+//            JButton button = new BasicArrowButton(BasicArrowButton.SOUTH);
+//            button.setFocusable(false);
+//            button.addActionListener(actionEvent -> {
+//                menu.show(button, 0, button.getHeight());
+//            });
+//            return button;
+//        }
+//
+//        private void initRenameOnDoubleClick() {
+//            addMouseListener(new MouseAdapter() {
+//
+//                public void mouseClicked(MouseEvent event) {
+//                    if (event.getClickCount() == 2) renameLabel(label);
+//                }
+//            });
+//        }
+//
+//        private JButton initColorButton() {
+//            JButton colorButton = new JButton();
+//            colorButton.setFocusable(false);
+//            colorButton.setBorder(new EmptyBorder(1, 1, 1, 1));
+//            colorButton.setIcon(GuiUtils.createIcon(new Color(label.color().get())));
+//            colorButton.addActionListener(l -> changeColor(label));
+//            return colorButton;
+//        }
+//
+//        private JButton initFinderButton() {
+//            return GuiUtils.createIconButton(GuiUtils.createAction("locate",
+//                    () -> localize(label), "crosshair.png"));
+//        }
+//
+//    }
 
 }

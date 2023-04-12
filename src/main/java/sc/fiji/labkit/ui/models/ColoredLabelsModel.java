@@ -94,7 +94,7 @@ public class ColoredLabelsModel {
 
 	public void removeLabel(Label label) {
 		model.labeling().get().removeLabel(label);
-		fireLabelsChanged();
+		//fireLabelsChanged();
 	}
 
 	public void renameLabel(Label label, String newLabel) {
@@ -166,7 +166,7 @@ public class ColoredLabelsModel {
 
 	// -- Helper methods --
 
-	private void fireLabelsChanged() {
+	public void fireLabelsChanged() {
 		Holder<Labeling> holder = model.labeling();
 		holder.notifier().notifyListeners();
 	}
