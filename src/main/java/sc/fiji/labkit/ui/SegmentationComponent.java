@@ -38,6 +38,7 @@ import sc.fiji.labkit.ui.models.SegmentationItem;
 import sc.fiji.labkit.ui.models.SegmentationModel;
 import sc.fiji.labkit.ui.panel.ImageInfoPanel;
 import sc.fiji.labkit.ui.panel.LabelPanel;
+import sc.fiji.labkit.ui.panel.SavePanel;
 import sc.fiji.labkit.ui.panel.SegmenterPanel;
 import sc.fiji.labkit.ui.plugin.MeasureConnectedComponents;
 import sc.fiji.labkit.ui.segmentation.PredictionLayer;
@@ -46,6 +47,7 @@ import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
+
 
 /**
  * {@link SegmentationComponent} is the central Labkit UI component. Provides UI
@@ -113,6 +115,8 @@ public class SegmentationComponent extends JPanel implements AutoCloseable {
 			.imageLabelingModel(), extensible, unmodifiableLabels), "grow, wrap, height 0:50");
 		panel.add(SegmenterPanel.newFramedSegmeterPanel(segmentationModel.segmenterList(),
 			extensible), "grow, height 0:50");
+		panel.add(SavePanel.newFramedSavePanel(segmentationModel
+				.imageLabelingModel(), extensible, false), "grow, wrap, height 0:50");
 		panel.invalidate();
 		panel.repaint();
 		return panel;
