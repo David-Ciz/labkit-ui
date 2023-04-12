@@ -28,7 +28,8 @@
  */
 
 package sc.fiji.labkit.ui.actions;
-
+import ij.IJ;
+import ij.plugin.PlugIn;
 import io.scif.services.DatasetIOService;
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
@@ -50,7 +51,9 @@ import org.scijava.plugin.Parameter;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
-
+import ij.ImagePlus;
+import ij.io.FileSaver;
+import de.csbdresden.stardist.StarDist2D;
 /**
  * Implements the "Import Bitmap...", and "Export Selected Label as Bitmap..."
  * menu items. As well as the "Export as Bitmap..." and "Show as Bitmap in
@@ -78,9 +81,19 @@ public class BitmapImportExportAction extends AbstractFileIoAction {
 		final Action<Void> voidAction = this::exportLabel;
 		initSaveAction(MenuBar.LABELING_MENU, "Export Selected Label as Bitmap ...",
 			101, voidAction, "");
-		extensible.addMenuItem(Label.LABEL_MENU, "Export as Bitmap ...", 400,
+		/*extensible.addMenuItem(Label.LABEL_MENU, "Export as Bitmap ...", 400,
 			label -> openDialogAndThen("Export Label as Bitmap",
 				JFileChooser.SAVE_DIALOG, label, this::exportLabel), null, null);
+
+		 */
+		extensible.addMenuItem(Label.LABEL_MENU, "Export as Bitmap ...", 400,
+				label -> {
+					try {
+						exportLabel(label, "stardist.tiff");
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				}, null, null);
 		extensible.addMenuItem(Label.LABEL_MENU, "Show as Bitmap in ImageJ", 401,
 			this::showLabel, null, "");
 	}
@@ -93,6 +106,24 @@ public class BitmapImportExportAction extends AbstractFileIoAction {
 		Labeling labeling = model.labeling().get();
 		RandomAccessibleInterval<BitType> bitmap = labeling.getRegion(label);
 		Dataset dataset = datasetService.create(toUnsignedByteType(bitmap));
+		ImagePlus imp = IJ.openImage("foreground.tiff");
+		ImageJFunctions.show(model.labeling().get().getRegion(label), label.name());
+		//ij.command().run(StarDist2D.class, true, params);
+		StarDist2D stardist = new StarDist2D();
+		//String arg = "modelChoice=Versatile, (fluorescent nuclei) normalizeInput=true percentileBottom=1.0 percentileTop=99.8 probThresh=0.5 nmsThresh=0.4 outputType=Label Image showCsb=true showProbAndDist=true excludeBoundary=2 roiPosition=Hyperstack";
+		//stardist.main(arg);
+		//stardist.input = imp;
+		stardist.run();
+		//IJ.runPlugIn(imp, "de.csbdresden.stardist.StarDist2D", "input=imp modelChoice=Versatile (fluorescent nuclei) normalizeInput=true percentileBottom=1.0 percentileTop=99.8 probThresh=0.5 nmsThresh=0.4 outputType=Label Image showCsb=true showProbAndDist=true excludeBoundary=2 roiPosition=Hyperstack");
+		// test of idiocy (it runs unfortunately)
+		//IJ.runPlugIn(imp, "de.csbdresden.stardist.StarDiasdasdasst2D", "modelChoice=Versgsdatile (fluorescent nucleasi) normalizeInput=true percendasdafhgf tileBottom=1.0 percentileTop=99.8 probThresh=0.5 nmsThresh=0.4 outputType=Label Image showCsb=true showProbAndDist=true excludeBoundary=2 roiPosition=Hyperstack");
+		// get the label image
+		ImagePlus labelImage = IJ.getImage();
+		// create a FileSaver object
+		FileSaver fs = new FileSaver(labelImage);
+
+		// save the label image as TIFF
+		fs.saveAsTiff("output.tif");
 		datasetIOService.save(dataset, filename);
 	}
 

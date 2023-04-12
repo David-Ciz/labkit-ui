@@ -62,6 +62,8 @@ public class ReplaceImageTest {
 			"labeling");
 		new ImageController(model.segmentation(), model.segmentationVisibility(), hp.getSidePanel(),
 			"segmentation");
+		new ImageController(model.stardist(), model.stardistVisibility(), hp.getSidePanel(),
+				"stardist");
 		frame.add(hp);
 		frame.pack();
 		frame.setVisible(true);
@@ -80,6 +82,10 @@ public class ReplaceImageTest {
 		private final Holder<BdvShowable> segmentation = new DefaultHolder<>(null);
 
 		private final Holder<Boolean> segmentationVisibility = new DefaultHolder<>(true);
+
+		private final Holder<BdvShowable> stardist = new DefaultHolder<>(null);
+
+		private final Holder<Boolean> stardistVisibility = new DefaultHolder<>(true);
 
 		public Holder<BdvShowable> image() {
 			return image;
@@ -103,6 +109,14 @@ public class ReplaceImageTest {
 
 		public Holder<Boolean> segmentationVisibility() {
 			return segmentationVisibility;
+		}
+
+		public Holder<BdvShowable> stardist() {
+			return stardist;
+		}
+
+		public Holder<Boolean> stardistVisibility() {
+			return stardistVisibility;
 		}
 	}
 

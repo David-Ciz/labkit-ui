@@ -27,40 +27,35 @@
  * #L%
  */
 
-package sc.fiji.labkit.ui;
+package sc.fiji.labkit.ui.segmentation.stardist;
 
-import sc.fiji.labkit.ui.menu.MenuKey;
+import net.imglib2.Cursor;
+import net.imglib2.RandomAccess;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.roi.IterableRegion;
+import net.imglib2.type.logic.BitType;
+import net.imglib2.type.numeric.RealType;
+import net.imglib2.util.Cast;
 
-import javax.swing.*;
-import java.util.function.Function;
+class MeanCalculator {
 
-/**
- * @author Matthias Arzt
- */
-public class MenuBar extends JMenuBar {
+	private double sum = 0;
+	private long count = 0;
 
-	public static final MenuKey<Void> LABELING_MENU = new MenuKey<>(Void.class);
-	public static final MenuKey<Void> SEGMENTER_MENU = new MenuKey<>(Void.class);
-	public static final MenuKey<Void> VIEW_MENU = new MenuKey<>(Void.class);
-	public static final MenuKey<Void> OTHERS_MENU = new MenuKey<>(Void.class);
-	public static final MenuKey<Void> HELP_MENU = new MenuKey<>(Void.class);
-
-	public static final MenuKey<Void> TEST_MENU = new MenuKey<>(Void.class);
-
-	public MenuBar(Function<MenuKey<Void>, JMenu> menuFactory) {
-		addMenu(menuFactory, LABELING_MENU, "Labeling");
-		addMenu(menuFactory, SEGMENTER_MENU, "Segmentation");
-		addMenu(menuFactory, VIEW_MENU, "View");
-		addMenu(menuFactory, OTHERS_MENU, "Others");
-		addMenu(menuFactory, HELP_MENU, "Help");
-		addMenu(menuFactory, TEST_MENU, "Test");
+	public void addSample(RandomAccessibleInterval<?> image,
+		IterableRegion<BitType> region)
+	{
+		Cursor<Void> cursor = region.cursor();
+		RandomAccess<RealType<?>> randomAccess = Cast.unchecked(image.randomAccess());
+		while (cursor.hasNext()) {
+			cursor.fwd();
+			randomAccess.setPosition(cursor);
+			sum += randomAccess.get().getRealDouble();
+			count++;
+		}
 	}
 
-	private void addMenu(Function<MenuKey<Void>, JMenu> menuFactory,
-		MenuKey<Void> key, String text)
-	{
-		final JMenu apply = menuFactory.apply(key);
-		apply.setText(text);
-		add(apply);
+	public double mean() {
+		return sum / count;
 	}
 }

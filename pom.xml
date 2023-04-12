@@ -114,6 +114,18 @@
 			<groupId>sc.fiji</groupId>
 			<artifactId>spim_data</artifactId>
 		</dependency>
+
+		<dependency>
+			<groupId>de.csbdresden</groupId>
+			<artifactId>StarDist_</artifactId>
+			<version>0.3.0-scijava</version>
+		</dependency>
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>de.csbdresden</groupId>-->
+<!--			<artifactId>stardist-imagej</artifactId>-->
+<!--			<version>0.1.0</version>-->
+<!--		</dependency>-->
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>scijava-common</artifactId>

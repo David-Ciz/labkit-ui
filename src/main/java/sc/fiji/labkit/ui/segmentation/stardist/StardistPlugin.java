@@ -6,13 +6,13 @@
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -27,40 +27,49 @@
  * #L%
  */
 
-package sc.fiji.labkit.ui;
+package sc.fiji.labkit.ui.segmentation.stardist;
 
-import sc.fiji.labkit.ui.menu.MenuKey;
-
-import javax.swing.*;
-import java.util.function.Function;
+import sc.fiji.labkit.ui.segmentation.SegmentationPlugin;
+import sc.fiji.labkit.ui.segmentation.Segmenter;
+import sc.fiji.labkit.pixel_classification.utils.SingletonContext;
+import org.scijava.Context;
+import org.scijava.plugin.Parameter;
+import org.scijava.plugin.Plugin;
 
 /**
- * @author Matthias Arzt
+ * Plugin provides the "Labkit Pixel Classification".
  */
-public class MenuBar extends JMenuBar {
+@Plugin(type = SegmentationPlugin.class)
+public class StardistPlugin implements SegmentationPlugin {
 
-	public static final MenuKey<Void> LABELING_MENU = new MenuKey<>(Void.class);
-	public static final MenuKey<Void> SEGMENTER_MENU = new MenuKey<>(Void.class);
-	public static final MenuKey<Void> VIEW_MENU = new MenuKey<>(Void.class);
-	public static final MenuKey<Void> OTHERS_MENU = new MenuKey<>(Void.class);
-	public static final MenuKey<Void> HELP_MENU = new MenuKey<>(Void.class);
+    @Parameter
+    Context context;
 
-	public static final MenuKey<Void> TEST_MENU = new MenuKey<>(Void.class);
+    @Override
+    public String getTitle() {
+        return "Stardist Pixel Classification";
+    }
 
-	public MenuBar(Function<MenuKey<Void>, JMenu> menuFactory) {
-		addMenu(menuFactory, LABELING_MENU, "Labeling");
-		addMenu(menuFactory, SEGMENTER_MENU, "Segmentation");
-		addMenu(menuFactory, VIEW_MENU, "View");
-		addMenu(menuFactory, OTHERS_MENU, "Others");
-		addMenu(menuFactory, HELP_MENU, "Help");
-		addMenu(menuFactory, TEST_MENU, "Test");
-	}
+    @Override
+    public Segmenter createSegmenter() {
+        return new StardistSegmentationSegmenter();
+    }
 
-	private void addMenu(Function<MenuKey<Void>, JMenu> menuFactory,
-		MenuKey<Void> key, String text)
-	{
-		final JMenu apply = menuFactory.apply(key);
-		apply.setText(text);
-		add(apply);
-	}
+    @Override
+    public boolean canOpenFile(String filename) {
+        try {
+            new StardistSegmentationSegmenter().openModel(filename);
+            return true;
+        }
+        catch (Exception e) {
+            return false;
+        }
+    }
+
+    /*public static SegmentationPlugin create() {
+        Context context = SingletonContext.getInstance();
+        StardistPlugin plugin = new SegmentationPlugin();
+        context.inject(plugin);
+        return plugin;
+    }*/
 }
