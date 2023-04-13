@@ -29,6 +29,7 @@
 
 package sc.fiji.labkit.ui.actions;
 
+import io.scif.config.SCIFIOConfig;
 import io.scif.services.DatasetIOService;
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
@@ -78,11 +79,17 @@ public class BitmapImportExportAction extends AbstractFileIoAction {
 		final Action<Void> voidAction = this::exportLabel;
 		initSaveAction(MenuBar.LABELING_MENU, "Export Selected Label as Bitmap ...",
 			101, voidAction, "");
+//		extensible.addMenuItem(Label.LABEL_MENU, "Export as Bitmap ...", 400,
+//			label -> openDialogAndThen("Export Label as Bitmap",
+//				JFileChooser.SAVE_DIALOG, label, this::exportLabel), null, null);
 		extensible.addMenuItem(Label.LABEL_MENU, "Export as Bitmap ...", 400,
-			label -> openDialogAndThen("Export Label as Bitmap",
-				JFileChooser.SAVE_DIALOG, label, this::exportLabel), null, null);
-		extensible.addMenuItem(Label.LABEL_MENU, "Show as Bitmap in ImageJ", 401,
-			this::showLabel, null, "");
+				label -> {
+					try {
+						exportLabel(label,"saved_segmentation.tiff");
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				}, null, null);
 	}
 
 	private void showLabel(Label label) {
@@ -93,7 +100,8 @@ public class BitmapImportExportAction extends AbstractFileIoAction {
 		Labeling labeling = model.labeling().get();
 		RandomAccessibleInterval<BitType> bitmap = labeling.getRegion(label);
 		Dataset dataset = datasetService.create(toUnsignedByteType(bitmap));
-		datasetIOService.save(dataset, filename);
+		SCIFIOConfig config = new SCIFIOConfig().writerSetFailIfOverwriting(false);
+		datasetIOService.save(dataset, filename, config);
 	}
 
 	private void importLabel(Void ignore, String filename) throws IOException {
