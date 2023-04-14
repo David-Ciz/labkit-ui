@@ -40,12 +40,16 @@ import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.util.Cast;
 import org.scijava.plugin.Parameter;
 import sc.fiji.labkit.ui.DefaultExtensible;
+import sc.fiji.labkit.ui.Extensible;
 import sc.fiji.labkit.ui.labeling.Label;
+import sc.fiji.labkit.ui.labeling.Labeling;
+import sc.fiji.labkit.ui.labeling.LabelingSerializer;
 import sc.fiji.labkit.ui.models.LabelingModel;
 import net.miginfocom.swing.MigLayout;
 import org.scijava.ui.behaviour.util.RunnableAction;
 
 import javax.swing.*;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
@@ -59,6 +63,7 @@ import java.util.function.Supplier;
 public class SavePanel {
 
     private final LabelingModel model;
+    private final LabelingSerializer serializer;
     private final ComponentList<Label, JPanel> list = new ComponentList<>();
     private final JPanel panel;
     private final JFrame dialogParent;
@@ -70,10 +75,11 @@ public class SavePanel {
     @Parameter
     DatasetIOService datasetIOService;
 
-    public SavePanel(JFrame dialogParent, LabelingModel model,
+    public SavePanel(JFrame dialogParent, LabelingModel model, Extensible extensible,
                       boolean fixedLabels, Function<Supplier<Label>, JPopupMenu> menuFactory)
     {
         this.model = model;
+        this.serializer = new LabelingSerializer(extensible.context());
         this.dialogParent = dialogParent;
         this.panel = initPanel(fixedLabels);
         this.menuFactory = menuFactory;
@@ -89,7 +95,7 @@ public class SavePanel {
     {
         return GuiUtils.createCheckboxGroupedPanel(imageLabelingModel
                 .labelingVisibility(), "Saving", new SavePanel(extensible
-                .dialogParent(), imageLabelingModel,
+                .dialogParent(), imageLabelingModel, extensible,
                 fixedLabels, item1 -> extensible.createPopupMenu(Label.LABEL_MENU,
                 item1)).getComponent());
     }
@@ -133,27 +139,38 @@ public class SavePanel {
 //    }
     private void saveAllLabels() {
         Path pathToFolder = Paths.get("/home/david/Work/catrin-bcd/");
-        String filename = "saving_test.tiff";
-        Path pathToFile = pathToFolder.resolve(filename);
-
+        String bitmap_filename = "saving_test.tiff";
+        Path pathToBitmap = pathToFolder.resolve(bitmap_filename);
         RandomAccessibleInterval<? extends IntegerType<?>> img = model.labeling().get().getIndexImg();
         ImagePlus imp = ImageJFunctions.wrap(Cast.unchecked(img), "labeling", null);
-        IJ.save(imp, pathToFile.toFile().getPath());
+        IJ.save(imp, pathToBitmap.toFile().getPath());
 
         //ImagePlus imp = ImageJFunctions.show(Cast.unchecked(img), "Labeling");
     }
     private void callStardist() {
+        Path pathToFolder = Paths.get("/home/david/Work/catrin-bcd/");
+        String labeling_filename = "saved_segmentation.tiff.labeling";
+        Path pathToLabeling = pathToFolder.resolve(labeling_filename);
         try {
             // Create a socket object and connect to the server
             Socket soc = new Socket("localhost", 2004);
             // Create a data output stream to write data to the socket
             DataOutputStream dout = new DataOutputStream(soc.getOutputStream());
+            // Create a data input stream to read data from the socket
+            DataInputStream din = new DataInputStream(soc.getInputStream());
             // Write the message in bytes
             dout.writeBytes("1");
             // Flush and close the stream and the socket
             dout.flush();
             dout.close();
-            soc.close();
+
+            String msg = din.readUTF();
+
+            if (msg.equals("1")){
+                Labeling labeling = serializer.open(pathToLabeling.toString());
+                model.labeling().set(labeling);
+            }
+ //           soc.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
