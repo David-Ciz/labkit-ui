@@ -57,6 +57,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import static sc.fiji.labkit.ui.Main.start;
+
 /**
  * Panel that shows the list of labels.
  */
@@ -162,7 +165,7 @@ public class SavePanel {
             dout.writeBytes("1");
             // Flush and close the stream and the socket
             dout.flush();
-            dout.close();
+            //dout.close();
 
             String msg = din.readUTF();
 
