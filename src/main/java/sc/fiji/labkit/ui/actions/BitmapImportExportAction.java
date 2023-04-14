@@ -85,7 +85,7 @@ public class BitmapImportExportAction extends AbstractFileIoAction {
 		extensible.addMenuItem(Label.LABEL_MENU, "Export as Bitmap ...", 400,
 				label -> {
 					try {
-						exportLabel(label,"saved_segmentation.tiff");
+						exportLabel(label,"/home/david/Work/catrin-bcd/saved_segmentation.tiff");
 					} catch (IOException e) {
 						throw new RuntimeException(e);
 					}

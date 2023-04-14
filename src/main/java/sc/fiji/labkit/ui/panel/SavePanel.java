@@ -46,7 +46,11 @@ import net.miginfocom.swing.MigLayout;
 import org.scijava.ui.behaviour.util.RunnableAction;
 
 import javax.swing.*;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Socket;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.function.Function;
 import java.util.function.Supplier;
 /**
@@ -115,6 +119,9 @@ public class SavePanel {
             buttonsPanel.add(GuiUtils.createActionIconButton("Save all",
                             new RunnableAction("Save all", this::saveAllLabels), "remove.png"),
                     "gapbefore push");
+            buttonsPanel.add(GuiUtils.createActionIconButton("Stardist",
+                            new RunnableAction("Save all", this::callStardist), "remove.png"),
+                    "gapbefore push");
             panel.add(buttonsPanel, "grow, span");
         }
         return panel;
@@ -125,10 +132,39 @@ public class SavePanel {
 //        items.forEach(model::removeLabel);
 //    }
     private void saveAllLabels() {
+        Path pathToFolder = Paths.get("/home/david/Work/catrin-bcd/");
         String filename = "saving_test.tiff";
+        Path pathToFile = pathToFolder.resolve(filename);
+
         RandomAccessibleInterval<? extends IntegerType<?>> img = model.labeling().get().getIndexImg();
         ImagePlus imp = ImageJFunctions.wrap(Cast.unchecked(img), "labeling", null);
-        IJ.save(imp, filename);
+        IJ.save(imp, pathToFile.toFile().getPath());
+
+        //ImagePlus imp = ImageJFunctions.show(Cast.unchecked(img), "Labeling");
+    }
+    private void callStardist() {
+        try {
+            // Create a socket object and connect to the server
+            Socket soc = new Socket("localhost", 2004);
+            // Create a data output stream to write data to the socket
+            DataOutputStream dout = new DataOutputStream(soc.getOutputStream());
+            // Write the message in bytes
+            dout.writeBytes("1");
+            // Flush and close the stream and the socket
+            dout.flush();
+            dout.close();
+            soc.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+//        Path pathToFolder = Paths.get("/home/david/Work/catrin-bcd/");
+//        String filename = "saved_segmentation.tiff";
+//        Path pathToFile = pathToFolder.resolve(filename);
+//        RandomAccessibleInterval<? extends IntegerType<?>> img = model.labeling().get().getIndexImg();
+//        ImagePlus imp = ImageJFunctions.wrap(Cast.unchecked(img), "labeling", null);
+//        IJ.save(imp, filename);
+
         //ImagePlus imp = ImageJFunctions.show(Cast.unchecked(img), "Labeling");
     }
     //        ImgSaver saver = new ImgSaver(extensible.context());
