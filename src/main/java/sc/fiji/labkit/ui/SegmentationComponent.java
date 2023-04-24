@@ -36,10 +36,7 @@ import sc.fiji.labkit.ui.models.Holder;
 import sc.fiji.labkit.ui.models.ImageLabelingModel;
 import sc.fiji.labkit.ui.models.SegmentationItem;
 import sc.fiji.labkit.ui.models.SegmentationModel;
-import sc.fiji.labkit.ui.panel.ImageInfoPanel;
-import sc.fiji.labkit.ui.panel.LabelPanel;
-import sc.fiji.labkit.ui.panel.SavePanel;
-import sc.fiji.labkit.ui.panel.SegmenterPanel;
+import sc.fiji.labkit.ui.panel.*;
 import sc.fiji.labkit.ui.plugin.MeasureConnectedComponents;
 import sc.fiji.labkit.ui.segmentation.PredictionLayer;
 import sc.fiji.labkit.ui.segmentation.TrainClassifier;
@@ -47,6 +44,11 @@ import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -107,6 +109,18 @@ public class SegmentationComponent extends JPanel implements AutoCloseable {
 	}
 
 	private JPanel initLeftPanel() {
+		PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:**/*.png");
+		Path folder = Paths.get("/home/david/Work/catrin-bcd/training_data/images");
+		List<Path> image_paths = new ArrayList<>();
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(folder)) {
+			for (Path path : stream) {
+				if (matcher.matches(path)) {
+					image_paths.add(path);
+				}
+			}
+		} catch (IOException e) {
+			// handle exception
+		}
 		JPanel panel = new JPanel();
 		panel.setLayout(new MigLayout("", "[grow]", "[][grow][grow]"));
 		panel.add(ImageInfoPanel.newFramedImageInfoPanel(segmentationModel.imageLabelingModel(),
@@ -117,6 +131,8 @@ public class SegmentationComponent extends JPanel implements AutoCloseable {
 			extensible), "grow, height 0:50");
 		panel.add(SavePanel.newFramedSavePanel(segmentationModel
 				.imageLabelingModel(), extensible, false), "grow, wrap, height 0:50");
+		panel.add(ImagePanel.newFramedImagePanel(segmentationModel
+				.imageLabelingModel(), extensible, false, image_paths), "grow, wrap, height 0:50");
 		panel.invalidate();
 		panel.repaint();
 		return panel;

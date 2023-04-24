@@ -105,7 +105,6 @@ public class LabelingSerializer {
 	public LabelingSerializer(Context context) {
 		this.context = context;
 	}
-
 	public Labeling open(String filename) throws IOException {
 		if (FilenameUtils.isExtension(filename, "tif", "tiff"))
 			return openFromTiff(filename);
@@ -113,6 +112,10 @@ public class LabelingSerializer {
 			return openFromJson(filename);
 		throw new IllegalArgumentException(
 			"Filename must have supported extension (*.labeling, *.tif, *.tiff)");
+	}
+
+	public Context getContext(){
+		return context;
 	}
 
 	private Labeling openFromJson(String filename) throws IOException {
