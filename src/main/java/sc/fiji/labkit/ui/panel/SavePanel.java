@@ -53,6 +53,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Function;
@@ -96,8 +97,7 @@ public class SavePanel {
             LabelingModel imageLabelingModel, DefaultExtensible extensible,
             boolean fixedLabels)
     {
-        return GuiUtils.createCheckboxGroupedPanel(imageLabelingModel
-                .labelingVisibility(), "Saving", new SavePanel(extensible
+        return GuiUtils.createGroupedPanel( "Saving and Stardist", new SavePanel(extensible
                 .dialogParent(), imageLabelingModel, extensible,
                 fixedLabels, item1 -> extensible.createPopupMenu(Label.LABEL_MENU,
                 item1)).getComponent());
@@ -140,14 +140,23 @@ public class SavePanel {
 //        List<Label> items = new ArrayList<>(model.items());
 //        items.forEach(model::removeLabel);
 //    }
-    private void saveAllLabels() {
-        Path pathToFolder = Paths.get("/home/david/Work/catrin-bcd/");
-        String bitmap_filename = "saving_test.tiff";
-        Path pathToBitmap = pathToFolder.resolve(bitmap_filename);
+    public void saveAllLabels() {
+        String bitmapFolderName = "instance_bitmaps";
+        Path pathToFolder = Paths.get(model.defaultFileName()).resolveSibling(bitmapFolderName);
+        String pathToLabelingFolder = model.defaultFileName();
+
+        String label_name = "l_" + model;
+        Path pathToBitmap = pathToFolder.resolve(label_name);
         RandomAccessibleInterval<? extends IntegerType<?>> img = model.labeling().get().getIndexImg();
         ImagePlus imp = ImageJFunctions.wrap(Cast.unchecked(img), "labeling", null);
-        IJ.save(imp, pathToBitmap.toFile().getPath());
 
+        try {
+            Files.createDirectories(pathToFolder);
+            IJ.save(imp, pathToBitmap.toFile().getPath());
+            serializer.save(model.labeling().get(), pathToLabelingFolder);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         //ImagePlus imp = ImageJFunctions.show(Cast.unchecked(img), "Labeling");
     }
     private void callStardist() {

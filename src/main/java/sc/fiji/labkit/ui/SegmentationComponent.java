@@ -44,10 +44,10 @@ import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -105,12 +105,14 @@ public class SegmentationComponent extends JPanel implements AutoCloseable {
 			labelingModel));
 		MeasureConnectedComponents.addAction(extensible, labelingModel);
 		new ShowHelpAction(extensible);
+		new SaveLabelingAction(extensible, segmentationModel);
 		labelingComponent.addShortcuts(extensible.getShortCuts());
 	}
 
 	private JPanel initLeftPanel() {
 		PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:**/*.png");
-		Path folder = Paths.get("/home/david/Work/catrin-bcd/training_data/images");
+		String folder_path = segmentationModel.imageLabelingModel().defaultFileName();
+		Path folder = Paths.get(folder_path).getParent();
 		List<Path> image_paths = new ArrayList<>();
 		try (DirectoryStream<Path> stream = Files.newDirectoryStream(folder)) {
 			for (Path path : stream) {
@@ -121,6 +123,7 @@ public class SegmentationComponent extends JPanel implements AutoCloseable {
 		} catch (IOException e) {
 			// handle exception
 		}
+		Collections.sort(image_paths);
 		JPanel panel = new JPanel();
 		panel.setLayout(new MigLayout("", "[grow]", "[][grow][grow][grow]"));
 		panel.add(ImageInfoPanel.newFramedImageInfoPanel(segmentationModel.imageLabelingModel(),
@@ -132,7 +135,7 @@ public class SegmentationComponent extends JPanel implements AutoCloseable {
 		panel.add(SavePanel.newFramedSavePanel(segmentationModel
 				.imageLabelingModel(), extensible, false), "grow, wrap");
 		panel.add(ImagePanel.newFramedImagePanel(segmentationModel
-				.imageLabelingModel(), extensible, false, image_paths), "grow, wrap, height 0:50");
+				.imageLabelingModel(), extensible, false, image_paths, labelingComponent), "grow, wrap, height 0:50");
 		panel.invalidate();
 		panel.repaint();
 		return panel;

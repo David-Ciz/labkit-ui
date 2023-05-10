@@ -51,6 +51,9 @@ import org.scijava.plugin.Parameter;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Implements the "Import Bitmap...", and "Export Selected Label as Bitmap..."
@@ -79,13 +82,18 @@ public class BitmapImportExportAction extends AbstractFileIoAction {
 		final Action<Void> voidAction = this::exportLabel;
 		initSaveAction(MenuBar.LABELING_MENU, "Export Selected Label as Bitmap ...",
 			101, voidAction, "");
+		String bitmapFolderName = "semantic_bitmaps";
+		String bitmapFileName = "saved_segmentation.tiff";
 //		extensible.addMenuItem(Label.LABEL_MENU, "Export as Bitmap ...", 400,
 //			label -> openDialogAndThen("Export Label as Bitmap",
 //				JFileChooser.SAVE_DIALOG, label, this::exportLabel), null, null);
+		String fileName = Paths.get(model.defaultFileName()).resolveSibling(bitmapFolderName).resolve(bitmapFileName).toString();
+
 		extensible.addMenuItem(Label.LABEL_MENU, "Export as Bitmap ...", 400,
 				label -> {
 					try {
-						exportLabel(label,"/home/david/Work/catrin-bcd/saved_segmentation.tiff");
+						Files.createDirectories(Paths.get(model.defaultFileName()).resolveSibling(bitmapFolderName));
+						exportLabel(label,fileName);
 					} catch (IOException e) {
 						throw new RuntimeException(e);
 					}

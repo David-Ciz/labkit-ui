@@ -109,11 +109,12 @@ public class SegmenterPanel extends JPanel {
 			SegmentationPluginService.class);
 		List<SegmentationPlugin> plugins = pluginService.getSegmentationPlugins();
 		JPopupMenu menu = new JPopupMenu();
-		for (SegmentationPlugin plugin : plugins) {
-			JMenuItem menuItem = new JMenuItem(plugin.getTitle());
-			menuItem.addActionListener(ignore -> addSegmenter(plugin));
-			menu.add(menuItem);
-		}
+		addSegmenter(plugins.get(1));
+//		for (SegmentationPlugin plugin : plugins) {
+//			JMenuItem menuItem = new JMenuItem(plugin.getTitle());
+//			menuItem.addActionListener(ignore -> addSegmenter(plugin));
+//			menu.add(menuItem);
+//		}
 		menu.show(addSegmenterButton, 0, addSegmenterButton.getHeight());
 	}
 

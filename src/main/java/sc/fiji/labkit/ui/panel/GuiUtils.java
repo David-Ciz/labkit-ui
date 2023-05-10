@@ -93,6 +93,21 @@ public class GuiUtils {
 		return dark;
 	}
 
+
+	public static JPanel createGroupedPanel(String text, JComponent panel)
+	{
+		JPanel dark = new JPanel();
+		dark.setLayout(new BorderLayout());
+		JPanel title = new JPanel();
+		title.add(new JLabel(text));
+		title.setBackground(new Color(200, 200, 200));
+		title.setLayout(new MigLayout("insets 4pt, gap 8pt, fillx", "10[][]10"));
+		dark.setBackground(new Color(200, 200, 200));
+		dark.add(title, BorderLayout.PAGE_START);
+		dark.add(panel, BorderLayout.CENTER);
+		return dark;
+	}
+
 	private static JCheckBox createCheckbox(Holder<Boolean> visibility,
 		String text)
 	{

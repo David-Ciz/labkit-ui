@@ -2,18 +2,22 @@
 package sc.fiji.labkit.ui.panel;
 
 import bdv.export.ProgressWriter;
+import ij.IJ;
+import ij.ImagePlus;
 import io.scif.services.DatasetIOService;
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.display.imagej.ImageJFunctions;
+import net.imglib2.type.numeric.IntegerType;
+import net.imglib2.util.Cast;
 import net.miginfocom.swing.MigLayout;
 import org.scijava.Context;
 import org.scijava.app.StatusService;
 import org.scijava.io.location.FileLocation;
 import org.scijava.plugin.Parameter;
 import org.scijava.ui.behaviour.util.RunnableAction;
-import sc.fiji.labkit.ui.DefaultExtensible;
-import sc.fiji.labkit.ui.Extensible;
-import sc.fiji.labkit.ui.LabkitFrame;
+import sc.fiji.labkit.ui.*;
 import sc.fiji.labkit.ui.inputimage.DatasetInputImage;
 import sc.fiji.labkit.ui.inputimage.InputImage;
 import sc.fiji.labkit.ui.inputimage.SpimDataInputImage;
@@ -30,9 +34,12 @@ import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -48,6 +55,7 @@ public class ImagePanel {
     private final List<Path> image_paths;
     private final JFrame dialogParent;
     private final Function<Supplier<Label>, JPopupMenu> menuFactory;
+    private final BasicLabelingComponent labelingComponent;
 
     @Parameter
     DatasetService datasetService;
@@ -56,7 +64,8 @@ public class ImagePanel {
     DatasetIOService datasetIOService;
 
     public ImagePanel(JFrame dialogParent, LabelingModel model, Extensible extensible,
-                     boolean fixedLabels, Function<Supplier<Label>, JPopupMenu> menuFactory, List<Path> image_paths)
+                     boolean fixedLabels, Function<Supplier<Label>, JPopupMenu> menuFactory, List<Path> image_paths,
+                      BasicLabelingComponent labelingComponent)
     {
         this.model = model;
         this.serializer = new LabelingSerializer(extensible.context());
@@ -64,6 +73,8 @@ public class ImagePanel {
         this.panel = initPanel(fixedLabels);
         this.menuFactory = menuFactory;
         this.image_paths = image_paths;
+        this.labelingComponent = labelingComponent;
+        
 //        model.listeners().addListener(this::update);
 //        model.selected().notifier().addListener(() -> list.setSelected(model.selected().get()));
 //        list.listeners().addListener(() -> model.selected().set(list.getSelected()));
@@ -72,13 +83,12 @@ public class ImagePanel {
 
     public static JPanel newFramedImagePanel(
             LabelingModel imageLabelingModel, DefaultExtensible extensible,
-            boolean fixedLabels, List<Path> image_paths)
+            boolean fixedLabels, List<Path> image_paths, BasicLabelingComponent labelingComponent)
     {
-        return GuiUtils.createCheckboxGroupedPanel(imageLabelingModel
-                .labelingVisibility(), "Images", new ImagePanel(extensible
+        return GuiUtils.createGroupedPanel("Images", new ImagePanel(extensible
                 .dialogParent(), imageLabelingModel, extensible,
                 fixedLabels, item1 -> extensible.createPopupMenu(Label.LABEL_MENU,
-                item1), image_paths).getComponent());
+                item1), image_paths, labelingComponent).getComponent());
     }
 
     public JComponent getComponent() {
@@ -146,16 +156,58 @@ public class ImagePanel {
 //        }
 //
         private void openNewInstance(Path image_path) {
+            //TODO: make this nicer, this is stupid
+            switch (JOptionPane.showConfirmDialog(dialogParent,
+                    "Do you want to save your changes?", "Close Window?",
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE)){
+                case JOptionPane.YES_OPTION:
+                    //  SaveLabeling(segmentationModel.imageLabelingModel());
+                    String bitmapFolderName = "instance_bitmaps";
+                    Path pathToFolder = Paths.get(model.defaultFileName()).resolveSibling(bitmapFolderName);
+                    String label_name = "l_" + model;
+                    Path pathToBitmap = pathToFolder.resolve(label_name);
+                    RandomAccessibleInterval<? extends IntegerType<?>> img = model.labeling().get().getIndexImg();
+                    ImagePlus imp = ImageJFunctions.wrap(Cast.unchecked(img), "labeling", null);
+
+                    String pathToLabelingFolder = model.defaultFileName();
+                    try {
+                        Files.createDirectories(pathToFolder);
+                        IJ.save(imp, pathToBitmap.toFile().getPath());
+                        serializer.save(model.labeling().get(), pathToLabelingFolder);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    openNewWindow(image_path);
+                case JOptionPane.NO_OPTION:
+                    openNewWindow(image_path);
+                case JOptionPane.CANCEL_OPTION:
+                    break;
+            }
+
+
+
+            //TODO: possible memory leak
+            //dialogParent.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+            //dialogParent.dispatchEvent(new WindowEvent(dialogParent, WindowEvent.WINDOW_CLOSING))
+
+            //start(img_path.toString());
+        }
+
+        private void openNewWindow(Path image_path){
             final Path absolutePath = image_path.toAbsolutePath();
+            //Save the previous image
 
             //Context context = null;
             Context context = serializer.getContext();
             ProgressWriter progressWriter = new StatusServiceProgressWriter(context
                     .service(StatusService.class));
             InputImage image = openImage(context, progressWriter, absolutePath.toFile());
+            labelingComponent.close();
+            dialogParent.dispose();
             LabkitFrame.showForImage(context, image);
-            //start(img_path.toString());
         }
+
         private void initOpenOnDoubleClick() {
             addMouseListener(new MouseAdapter() {
 
