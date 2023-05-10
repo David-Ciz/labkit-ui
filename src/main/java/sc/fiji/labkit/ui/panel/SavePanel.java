@@ -160,31 +160,39 @@ public class SavePanel {
         //ImagePlus imp = ImageJFunctions.show(Cast.unchecked(img), "Labeling");
     }
     private void callStardist() {
-        Path pathToFolder = Paths.get("/home/david/Work/catrin-bcd/");
-        String labeling_filename = "saved_segmentation.tiff.labeling";
-        Path pathToLabeling = pathToFolder.resolve(labeling_filename);
-        try {
-            // Create a socket object and connect to the server
-            Socket soc = new Socket("localhost", 2004);
-            // Create a data output stream to write data to the socket
-            DataOutputStream dout = new DataOutputStream(soc.getOutputStream());
-            // Create a data input stream to read data from the socket
-            DataInputStream din = new DataInputStream(soc.getInputStream());
-            // Write the message in bytes
-            dout.writeBytes("1");
-            // Flush and close the stream and the socket
-            dout.flush();
-            //dout.close();
+        String bitmapFolderName = "semantic_bitmaps";
+        String bitmapFileName = "saved_segmentation.tiff";
 
-            String msg = din.readUTF();
+        Path pathToFolder = Paths.get(model.defaultFileName()).resolveSibling(bitmapFolderName);
+        if (!Files.exists(pathToFolder.resolve(bitmapFileName))){
+            JOptionPane.showMessageDialog(null, "Bitmap from label not found!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        else {
+            String labeling_filename = "saved_segmentation.tiff.labeling";
+            Path pathToLabeling = pathToFolder.resolve(labeling_filename);
+            try {
+                // Create a socket object and connect to the server
+                Socket soc = new Socket("localhost", 2004);
+                // Create a data output stream to write data to the socket
+                DataOutputStream dout = new DataOutputStream(soc.getOutputStream());
+                // Create a data input stream to read data from the socket
+                DataInputStream din = new DataInputStream(soc.getInputStream());
+                // Write the message in bytes
+                dout.writeBytes("1");
+                // Flush and close the stream and the socket
+                dout.flush();
+                //dout.close();
 
-            if (msg.equals("1")){
-                Labeling labeling = serializer.open(pathToLabeling.toString());
-                model.labeling().set(labeling);
+                String msg = din.readUTF();
+
+                if (msg.equals("1")) {
+                    Labeling labeling = serializer.open(pathToLabeling.toString());
+                    model.labeling().set(labeling);
+                }
+                //           soc.close();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
- //           soc.close();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
 //        Path pathToFolder = Paths.get("/home/david/Work/catrin-bcd/");

@@ -205,6 +205,18 @@ public class ImagePanel {
             InputImage image = openImage(context, progressWriter, absolutePath.toFile());
             labelingComponent.close();
             dialogParent.dispose();
+
+            // remove the semantic bitmap so it's easier for user to understand the need to create it again
+
+            String bitmapFolderName = "semantic_bitmaps";
+            String bitmapFileName = "saved_segmentation.tiff";
+            Path pathToFile = Paths.get(model.defaultFileName()).resolveSibling(bitmapFolderName).resolve(bitmapFileName);
+
+            try {
+                Files.deleteIfExists(pathToFile);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             LabkitFrame.showForImage(context, image);
         }
 
