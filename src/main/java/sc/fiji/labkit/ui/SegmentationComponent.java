@@ -49,6 +49,7 @@ import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 
 /**
@@ -113,13 +114,10 @@ public class SegmentationComponent extends JPanel implements AutoCloseable {
 		PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:**/*.png");
 		String folder_path = segmentationModel.imageLabelingModel().defaultFileName();
 		Path folder = Paths.get(folder_path).getParent();
+		Path parent = folder.getParent(); // the parent directory of the folder
 		List<Path> image_paths = new ArrayList<>();
-		try (DirectoryStream<Path> stream = Files.newDirectoryStream(folder)) {
-			for (Path path : stream) {
-				if (matcher.matches(path)) {
-					image_paths.add(path);
-				}
-			}
+		try (Stream<Path> stream = Files.walk(parent, 2)) {
+			stream.filter(matcher::matches).forEach(image_paths::add);
 		} catch (IOException e) {
 			// handle exception
 		}
