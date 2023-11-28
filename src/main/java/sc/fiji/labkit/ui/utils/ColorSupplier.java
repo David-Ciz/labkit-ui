@@ -46,4 +46,7 @@ public class ColorSupplier implements Supplier<ARGBType> {
 		if (hue > 1f) hue -= 1f;
 		return new ARGBType(Color.HSBtoRGB(hue, 1f, 1f));
 	}
+	public void reset_hue() {
+		hue = 1f - 2f * GOLDEN_ANGLE;
+	}
 }

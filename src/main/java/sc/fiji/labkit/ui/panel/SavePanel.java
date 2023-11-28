@@ -178,14 +178,15 @@ public class SavePanel {
                 // Create a data input stream to read data from the socket
                 DataInputStream din = new DataInputStream(soc.getInputStream());
                 // Write the message in bytes
-                dout.writeBytes("1");
+                String imagePath = pathToLabeling.toString(); // change this to the actual image path
+                dout.writeUTF(String.format("stardist %s", imagePath));
                 // Flush and close the stream and the socket
                 dout.flush();
                 //dout.close();
 
                 String msg = din.readUTF();
 
-                if (msg.equals("1")) {
+                if (msg.equals("success")) {
                     Labeling labeling = serializer.open(pathToLabeling.toString());
                     model.labeling().set(labeling);
                 }

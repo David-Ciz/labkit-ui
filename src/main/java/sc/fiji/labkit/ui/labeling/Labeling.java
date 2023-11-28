@@ -185,6 +185,8 @@ public class Labeling extends AbstractWrappedInterval<Interval> implements
 		return labels;
 	}
 
+	public ColorSupplier getColorSupplier() { return colorSupplier;}
+
 	public void setAxes(List<CalibratedAxis> axes) {
 		this.axes = axes.stream().map(CalibratedAxis::copy).collect(Collectors
 			.toList());

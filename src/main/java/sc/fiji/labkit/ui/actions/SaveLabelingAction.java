@@ -8,6 +8,7 @@ import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.util.Cast;
 import sc.fiji.labkit.ui.BasicLabelingComponent;
 import sc.fiji.labkit.ui.Extensible;
+import sc.fiji.labkit.ui.labeling.Labeling;
 import sc.fiji.labkit.ui.labeling.LabelingSerializer;
 import sc.fiji.labkit.ui.models.LabelingModel;
 import sc.fiji.labkit.ui.models.SegmentationModel;
@@ -34,24 +35,33 @@ public class SaveLabelingAction {
                         JOptionPane.QUESTION_MESSAGE)){
                     case JOptionPane.YES_OPTION:
                         SaveLabeling(segmentationModel.imageLabelingModel(), extensible);
-                        System.exit(0);
-                        break;
+                        try {
+                            Socket soc = new Socket("localhost", 2004);
+                            // Create a data output stream to write data to the socket
+                            DataOutputStream dout = new DataOutputStream(soc.getOutputStream());
+                            DataInputStream din = new DataInputStream(soc.getInputStream());
+                            String bitmapFolderName = "instance_bitmaps";
+                            Path pathToFolder = Paths.get(segmentationModel.imageLabelingModel().defaultFileName()).getParent();
+                            String imagePath = pathToFolder.toString();
+                            // Write the message in UTF
+                            dout.writeUTF(String.format("metrics %s", imagePath));
+                            // Flush and close the stream and the socket
+                            dout.flush();
+                            //dout.close();
+
+                            String msg = din.readUTF();
+                            if (msg.equals("success")) {
+                                System.exit(0);
+                                break;
+                            }
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+
+
                     case JOptionPane.NO_OPTION:
 //                        //System.exit(0);
-//                        Socket soc = null;
-//                        try {
-//                            soc = new Socket("localhost", 2004);
-//                            // Create a data output stream to write data to the socket
-//                            DataOutputStream dout = new DataOutputStream(soc.getOutputStream());
-//                            // Write the message in bytes
-//                            dout.writeBytes("2");
-//                            // Flush and close the stream and the socket
-//                            dout.flush();
-//                            //dout.close();
-//                        } catch (IOException e) {
-//                            throw new RuntimeException(e);
-//                        }
-//                        break;
+//
                           System.exit(0);
                     case JOptionPane.CANCEL_OPTION:
                         break;

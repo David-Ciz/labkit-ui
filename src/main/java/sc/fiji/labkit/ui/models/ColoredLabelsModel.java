@@ -40,6 +40,7 @@ import sc.fiji.labkit.ui.utils.Notifier;
 import net.imglib2.roi.IterableRegion;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.ARGBType;
+import sc.fiji.labkit.ui.utils.ColorSupplier;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -94,6 +95,8 @@ public class ColoredLabelsModel {
 
 	public void removeAllLabels(List<Label> items) {
 		items.forEach(label -> model.labeling().get().removeLabel(label));
+		ColorSupplier colorSupplier = model.labeling().get().getColorSupplier();
+		colorSupplier.reset_hue();
 		fireLabelsChanged();
 	}
 
